@@ -1,0 +1,104 @@
+/*****************************************************************
+* SAS Visual Text Analytics
+* Concepts Score Code
+*
+* Modify the following macro variables to match your needs.
+* The liti_binary_caslib and liti_binary_table_name variables
+* should have already been set to the location of the concepts
+* binary table for the associated SAS Visual Text Analytics project.
+****************************************************************/
+
+/* Run this to connect all your caslibs */
+cas;
+caslib _all_ assign;
+
+/* cas library information for cas table containing the data set you would like to score */
+%let caslib_name="Public";
+
+/* the cas table you would like to score */
+%let input_table_name = "REG_FOOD_SAFETY_PARSED_TR2_UID";
+
+/* the column in the cas table that contains the contains a unique id */
+%let key_column = "u_id";
+
+/* the column in the cas table that contains the text data to score */
+%let document_column = "violation_parsed";
+
+/* cas library information for output cas tables to produce */
+%let output_caslib_name = "casuser";
+
+/* the concepts output cas table to produce */
+%let output_concepts_table_name = "VIOLATION_CONCEPTS";
+
+/* the facts output cas table to produce */
+%let output_facts_table_name = "VIOLATION_FACTS";
+
+/* specifies the CAS library information for the LITI binary table. This should be set automatically to the CAS library for the associated SAS Visual Text Analytics project. */
+%let liti_binary_caslib = "Analytics_Project_11479788-1496-498b-9d0b-7d313428ecb4";
+
+/* specifies the name of the LITI binary table. This should be set automatically to the Concepts node model table for the associated SAS Visual Text Analytics project. */
+%let liti_binary_table_name = "8a74807885508ff801860e276bc90002_CONCEPT_BINARY";
+
+/* specifies the hostname for the CAS server. This should be set automatically to the host for the associated SAS Visual Text Analytics project. */
+%let cas_server_hostname = "sas-cas-server-default-client";
+
+/* specifies the port for the CAS server. This should be set automatically to the host for the associated SAS Visual Text Analytics project. */
+%let cas_server_port = 5570;
+
+/* create a session */
+cas sascas1 host=&cas_server_hostname port=&cas_server_port uuidmac=sascas1_uuid  ;
+libname casuser cas sessref=sascas1 datalimit=all;
+
+/* call the scoring action */
+proc cas;
+    session sascas1;
+    loadactionset "textRuleScore";
+
+    action applyConcept;
+        param
+            model={caslib=&liti_binary_caslib, name=&liti_binary_table_name}
+            table={caslib=&caslib_name, name=&input_table_name}
+            docId=&key_column
+            text=&document_column
+            casOut={caslib=&output_caslib_name, name=&output_concepts_table_name, replace=TRUE}
+            factOut={caslib=&output_caslib_name, name=&output_facts_table_name, replace=TRUE}
+        ;
+    run;
+quit;
+
+/* After you score concepts, run this to promote the table to memory */
+proc cas;
+ table.promote/
+  caslib="casuser"
+  name="VIOLATION_CONCEPTS"
+  targetlib="public";
+quit;
+
+/* This is an example join from concepts table to the original data table via a u_id */
+proc fedsql sessref=sascas1;
+create table public.REG_FOOD_SAFETY_VA as
+select c._concept_
+ , c._match_text_
+ , s.*
+ from public.VIOLATION_CONCEPTS c
+ left join
+public.REG_FOOD_SAFETY_PARSED_TR2_UID s
+on c.u_id = s.u_id;
+quit;
+
+/* After you join tables, run this to promote the table to memory */
+proc cas;
+ table.promote/
+  caslib="public"
+  name="REG_FOOD_SAFETY_VA"
+  targetlib="public";
+quit;
+
+/* Run this to save scored va dataset to disk. Be sure to set the correct caslibs */
+proc casutil;
+    save casdata="REG_FOOD_SAFETY_VA" incaslib=PUBLIC outcaslib=PUBLIC
+     casout="REG_FOOD_SAFETY_VA" compress replace;
+quit;
+
+
+
