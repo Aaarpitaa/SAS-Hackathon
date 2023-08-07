@@ -1,5 +1,5 @@
 # SAS-Hackathon
-Won the Regional award, for sharing their innovative ideas and solutions to a real-world challenge (End Forced Labor)
+
 In today's interconnected world, supply chain companies play a pivotal role in driving global commerce and ensuring the smooth flow of goods and services. As they expand their global footprints to meet the demands of consumers efficiently, a dark reality lurks beneath the surface. Forced labor, a form of modern-day slavery, continues to persist within the intricate web of global business supply chains. Today, more than 27 million people are in situation of forced labor worldwide on any given day. People are taken to a crowded factory, and forced to work 12 hours a day, 7 days a week where the factory is unsafe and are often subjected to verbal and physical abuses.
  
 Now, one might ask, can we turn a blind eye to this injustice? The answer is a resounding no! As conscious global citizens, we are compelled to take action, seeking solutions and taking steps to eliminate potential labor exploitation and modern slavery within supply chains.
